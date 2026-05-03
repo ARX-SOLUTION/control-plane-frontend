@@ -389,7 +389,7 @@ export default function EnvVarsPage() {
                       type="submit"
                       size="sm"
                       loading={creating}
-                      disabled={!newKey.trim() || !newValue.trim()}
+                      disabled={!newKey.trim() || !newValue.trim() || !selectedEnvId}
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Add
