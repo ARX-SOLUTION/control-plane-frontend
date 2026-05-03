@@ -88,6 +88,15 @@ const projectOverviewRoute = createRoute({
   ),
 });
 
+const projectEnvironmentsRoute = createRoute({
+  getParentRoute: () => projectRoute,
+  path: "environments",
+  component: lazyRouteComponent(
+    () => import("@/routes/projects/$id/environments"),
+    "default",
+  ),
+});
+
 const projectEnvVarsRoute = createRoute({
   getParentRoute: () => projectRoute,
   path: "env-vars",
@@ -240,6 +249,7 @@ const routeTree = rootRoute.addChildren([
     projectRoute.addChildren([
       projectIndexRoute,
       projectOverviewRoute,
+      projectEnvironmentsRoute,
       projectEnvVarsRoute,
       projectDeploymentsRoute,
       projectDeploymentDetailRoute,

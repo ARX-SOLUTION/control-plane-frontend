@@ -8,8 +8,9 @@ import { cn } from '@/lib/utils'
 // ─── Tab definition ───────────────────────────────────────────────────────────
 
 const TABS = [
-  { label: 'Overview',    segment: 'overview'    },
-  { label: 'Env Vars',    segment: 'env-vars'    },
+  { label: 'Overview',      segment: 'overview'      },
+  { label: 'Environments',  segment: 'environments'  },
+  { label: 'Env Vars',      segment: 'env-vars'      },
   { label: 'Deployments', segment: 'deployments' },
   { label: 'Domains',     segment: 'domains'     },
   { label: 'Databases',   segment: 'databases'   },

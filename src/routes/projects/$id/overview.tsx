@@ -302,7 +302,14 @@ export default function ProjectOverviewPage() {
           </Button>
           {environments.length === 0 && (
             <p className="text-xs text-fg-subtle text-center">
-              No environments configured yet.
+              No environments yet.{' '}
+              <Link
+                to="/projects/$id/environments"
+                params={{ id }}
+                className="text-accent hover:underline"
+              >
+                Set up environments →
+              </Link>
             </p>
           )}
         </div>

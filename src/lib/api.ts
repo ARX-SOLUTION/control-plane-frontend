@@ -6,6 +6,8 @@ export function setOn401(handler: () => void) {
   on401 = handler
 }
 
+const BASE = (import.meta.env.VITE_API_BASE_URL as string) ?? ''
+
 export async function api<T = unknown>(
   path: string,
   init: RequestInit & { json?: unknown } = {},
@@ -17,7 +19,7 @@ export async function api<T = unknown>(
     ...(fetchInit.headers as Record<string, string> ?? {}),
   }
 
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${BASE}/api${path}`, {
     credentials: 'include',
     headers,
     ...fetchInit,
