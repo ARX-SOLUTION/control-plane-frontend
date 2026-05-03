@@ -6,7 +6,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export default function GlobalMonitoringPage() {
   const { data: config, isLoading } = useGrafanaConfig()
-  const grafanaUrl = (config as { url?: string } | undefined)?.url
+  const cfg = config as { url?: string; dashboards?: { metrics?: string; deployment?: string } } | undefined
+  const grafanaUrl = cfg?.url
+  const metricsDashboard = cfg?.dashboards?.metrics
 
   if (isLoading) {
     return (
@@ -54,8 +56,7 @@ export default function GlobalMonitoringPage() {
     )
   }
 
-  // Full-page Grafana embed (infrastructure overview dashboard)
-  const embedUrl = `${grafanaUrl}/d/infra-overview/infrastructure-overview?orgId=1&kiosk=tv`
+  const embedUrl = `${grafanaUrl}/d/${metricsDashboard ?? 'rYdddlPWk'}?orgId=1&kiosk=tv`
 
   return (
     <div className="h-full flex flex-col">
