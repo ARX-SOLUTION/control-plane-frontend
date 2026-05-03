@@ -1,14 +1,14 @@
 import * as React from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, Link } from '@tanstack/react-router'
 import { type ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
-import { Plus, Copy, Check, Trash2, Database } from 'lucide-react'
+import { Plus, Copy, Check, Database } from 'lucide-react'
 import {
   useDatabasesQuery,
   useCreateDatabaseMutation,
-  useDeleteDatabaseMutation,
   useGetConnectionStringMutation,
 } from '@/features/databases/hooks'
+import { useProjectsQuery } from '@/features/projects/hooks'
 import { DataTable } from '@/components/data-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -95,17 +95,17 @@ function ConnectionStringDialog({
 // ─── Provision dialog ─────────────────────────────────────────────────────────
 
 function ProvisionDialog({ onClose }: { onClose: () => void }) {
-  const navigate = useNavigate()
   const [name, setName] = React.useState('')
   const [type, setType] = React.useState<DatabaseType>('postgres')
   const [projectId, setProjectId] = React.useState('')
   const { mutate: createDatabase, isPending } = useCreateDatabaseMutation()
+  const { data: projects = [] } = useProjectsQuery()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !projectId.trim()) return
+    if (!name.trim() || !projectId) return
     createDatabase(
-      { projectId: projectId.trim(), name: name.trim(), type },
+      { projectId, name: name.trim(), type },
       {
         onSuccess: () => {
           toast.success(`Database "${name}" provisioned`)
@@ -126,16 +126,19 @@ function ProvisionDialog({ onClose }: { onClose: () => void }) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Project ID</Label>
-            <Input
-              placeholder="proj_..."
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-              className="font-mono text-sm"
-            />
-            <p className="text-xs text-fg-subtle">
-              Or navigate to a project's Databases tab to provision from there.
-            </p>
+            <Label>Project</Label>
+            <Select value={projectId} onValueChange={setProjectId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Name</Label>
@@ -160,7 +163,7 @@ function ProvisionDialog({ onClose }: { onClose: () => void }) {
           </div>
           <DialogFooter>
             <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-            <Button type="submit" loading={isPending} disabled={!name.trim() || !projectId.trim()}>
+            <Button type="submit" loading={isPending} disabled={!name.trim() || !projectId}>
               Provision
             </Button>
           </DialogFooter>
@@ -173,8 +176,8 @@ function ProvisionDialog({ onClose }: { onClose: () => void }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AllDatabasesPage() {
-  const navigate = useNavigate()
   const { data: databases = [], isLoading } = useDatabasesQuery()
+  const { data: projects = [] } = useProjectsQuery()
   const { mutate: getConnectionString } = useGetConnectionStringMutation()
 
   const [provisionOpen, setProvisionOpen] = React.useState(false)
@@ -182,6 +185,11 @@ export default function AllDatabasesPage() {
     dbName: string
     connectionString: string
   } | null>(null)
+
+  const projectMap = React.useMemo(
+    () => new Map(projects.map((p) => [p.id, p])),
+    [projects]
+  )
 
   const handleGetConnectionString = (db: Db) => {
     getConnectionString(db.id, {
@@ -213,16 +221,22 @@ export default function AllDatabasesPage() {
       {
         accessorKey: 'projectId',
         header: 'Project',
-        cell: ({ row }) => (
-          <button
-            onClick={() =>
-              navigate({ to: '/projects/$id', params: { id: row.original.projectId } })
-            }
-            className="text-xs text-accent hover:underline font-mono"
-          >
-            {row.original.projectId.slice(0, 12)}…
-          </button>
-        ),
+        cell: ({ row }) => {
+          const project = projectMap.get(row.original.projectId)
+          return project ? (
+            <Link
+              to="/projects/$id"
+              params={{ id: project.id }}
+              className="text-sm text-accent hover:underline"
+            >
+              {project.displayName}
+            </Link>
+          ) : (
+            <code className="text-xs font-mono text-fg-muted">
+              {row.original.projectId.slice(0, 8)}…
+            </code>
+          )
+        },
       },
       {
         accessorKey: 'isActive',
@@ -268,7 +282,7 @@ export default function AllDatabasesPage() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [navigate]
+    [projectMap]
   )
 
   return (
